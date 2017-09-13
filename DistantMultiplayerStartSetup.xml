@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GameInfo>
+	<Parameters>
+		<Row ParameterId="DistantHumanStartPositions" Name="LOC_DISTANT_HUMAN_START_POSITIONS" Description="LOC_DISTANT_HUMAN_START_POSITIONS_DESCRIPTION" Domain="bool" DefaultValue="1" ConfigurationGroup="Map" ConfigurationId="DISTANT_HUMAN_START_POSITIONS" GroupId="MapOptions" SupportsSinglePlayer="0" SortIndex="2000"/>
+	</Parameters>
+</GameInfo>

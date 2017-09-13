@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GameData>
+	<LocalizedText>
+		<Replace Tag="LOC_DISTANT_HUMAN_START_POSITIONS" Language="en_US">
+			<Text>Distant Human Start Positions</Text>
+		</Replace>
+		<Replace Tag="LOC_DISTANT_HUMAN_START_POSITIONS_DESCRIPTION" Language="en_US">
+			<Text>Human players will be placed as far apart as possible. Currently only supports 2 human players. With 3 or more human players in a game, this option will have no effect.</Text>
+		</Replace>
+	</LocalizedText>
+<GameData>

@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Mod id="c13c30a0-e701-4541-aa26-8e82d754dbc1">
+	<Properties>
+		<Name>Distant Multiplayer Start</Name>
+		<Description>Maximises the distance between human player starting tiles in multiplayer games. The mod currently supports two human players, with any number of AI players. The mod will not have any effect in a game with three or more human players, because these situations are not supported yet.</Description>
+		<Teaser>Maximises distance between human start positions in multiplayer games.</Teaser>
+		<Authors>Kevin Coghlan</Authors>
+		<AffectsSavedGames>0</AffectsSavedGames>
+		<SupportsSinglePlayer>0</SupportsSinglePlayer>
+	</Properties>
+  <References/>
+	<Dependencies/>
+	<!--Known incompatible mods are listed below. Mods which override 'AssignStartingPlots.lua' are incompatible with Distant Multiplayer Start.-->
+	<Blocks>
+	  <Mod id="36e88483-48fe-4545-b85f-bafc50dde315"/> <!-- Yet (not) Another Maps Pack -->
+	</Blocks>
+	<FrontEndActions>
+		<UpdateDatabase>
+			<File>DistantMultiplayerStartSetup.xml</File>
+		</UpdateDatabase>
+		<UpdateText>
+			<File>DistantMultiplayerStartSetupText.xml</File>
+		</UpdateText>
+	</FrontEndActions>
+	<Files>
+		<File>Override/AssignStartingPlots.lua</File>
+		<File>DistantMultiplayerStart.lua</File>
+		<File>DistantMultiplayerStartSetup.xml</File>
+		<File>DistantMultiplayerStartSetupText.xml</File>
+	</Files>
+	<Components>
+		<ImportFiles>
+			<Items>
+				<File>Override/AssignStartingPlots.lua</File>
+				<File>DistantMultiplayerStart.lua</File>
+			</Items>
+		</ImportFiles>
+		<Settings>
+			<Items>
+				<File>DistantMultiplayerStartSetup.xml</File>
+			</Items>
+			<LocalizedText>
+				<Items>
+					<File>DistantMultiplayerStartSettingsText.xml</File>
+				</Items>
+			</LocalizedText>
+		</Settings>
+	</Components>
+</Mod>
