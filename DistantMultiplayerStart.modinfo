@@ -2,7 +2,7 @@
 <Mod id="c13c30a0-e701-4541-aa26-8e82d754dbc1">
 	<Properties>
 		<Name>Distant Multiplayer Start</Name>
-		<Description>Maximises the distance between human player starting tiles in multiplayer games. The mod currently supports two human players, with any number of AI players. The mod will not have any effect in a game with three or more human players, because these situations are not supported yet.</Description>
+		<Description>Maximises the distance between human starting positions in multiplayer games. This is achieved by swapping human and AI start positions as necessary to place the humans as far apart as possible.</Description>
 		<Teaser>Maximises distance between human start positions in multiplayer games.</Teaser>
 		<Authors>Kevin Coghlan</Authors>
 		<AffectsSavedGames>0</AffectsSavedGames>
