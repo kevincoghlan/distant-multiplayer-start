@@ -121,7 +121,7 @@ function FindMostDistantPlayers( allPlayerList, humanPlayerCount )
 	local mostDistantPlayerList
 
 	--The algorithm to be used depends upon the number of human players.
-	if (humanPlayerCount == 2) then
+	if humanPlayerCount == 2 then
 		mostDistantPlayerList = FindTwoMostDistantPlayers( allPlayerList )
 	else
 		assert( humanPlayerCount >= 3 )
@@ -215,7 +215,7 @@ function FindSeveralMostDistantPlayers( playerComboList )
 		local currentPlayerCombo = playerComboList[i]
 
 		--Store the distances between all starting plots in the current player combination.
-		local distanceList = ConditionallyGeneratedistanceList( currentPlayerCombo, highestMinDistance )
+		local distanceList = ConditionallyGenerateDistanceList( currentPlayerCombo, highestMinDistance )
 
 		--If a nil cache was returned, this indicates that the starting plots in this combination are too close together. The combination can be discarded.
 		--Otherwise, examine the returned distance cache to determine whether this player combination is more optimal than the current lead candidate.
@@ -254,7 +254,7 @@ end
 -- @param playerCombo A table of Players.
 -- @param requiredMinDistance For a distance cache to be returned from this function, all distances within the combination must be greater than or equal to the requiredMinDistance parameter. Otherwise nil will be returned.
 -- @return a table of distance values (integers), or nil if any distance is found which is below the requiredMinDistance. This is an optimisation to reject suboptimal (i.e. too close together) player combinations as early as possible.
-function ConditionallyGeneratedistanceList( playerCombo, requiredMinDistance )
+function ConditionallyGenerateDistanceList( playerCombo, requiredMinDistance )
 	local distanceList = {}
 
 	for j = 1, #playerCombo do
