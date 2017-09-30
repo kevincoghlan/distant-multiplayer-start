@@ -13,11 +13,17 @@ function DistantMultiplayerStart( playerIDList )
 	local allPlayerList, humanPlayerList, aiPlayerList = GeneratePlayerLists( playerIDList )
 
 	if #humanPlayerList < #allPlayerList then
-		print("Distant Multiplayer Start processing has started at " .. GenerateTimestamp())
-		PrintStartingPlotsWithMessage( "Initial starting plots, before the mod makes any changes:", humanPlayerList, aiPlayerList )
+		print("Distant Multiplayer Start processing started at " .. GenerateTimestamp())
+		PrintSeparatorLine()
+		print("Initial starting plots, before the mod makes any changes:")
+		PrintAllStartingPlots( humanPlayerList, aiPlayerList )
+
 		MaximizeDistanceBetweenHumanPlayers( allPlayerList, humanPlayerList )
-		PrintStartingPlotsWithMessage( "Final starting plots:", humanPlayerList, aiPlayerList )
-		print("Distant Multiplayer Start processing has finished at " .. GenerateTimestamp())
+
+		PrintSeparatorLine()
+		print("Final starting plots:")
+		PrintAllStartingPlots( humanPlayerList, aiPlayerList )
+		print("Distant Multiplayer Start processing finished at " .. GenerateTimestamp())
 	elseif #humanPlayerList == #allPlayerList then
 		PrintAllPlayersAreHumanMessage()
 	end
@@ -52,16 +58,9 @@ function GeneratePlayerLists( playerIDList )
 	return allPlayerList, humanPlayerList, aiPlayerList
 end
 
-function PrintStartingPlotsWithMessage( message, humanPlayerList, aiPlayerList )
-	PrintBeneathSeparatorLine( message )
+function PrintAllStartingPlots( humanPlayerList, aiPlayerList )
 	PrintStartingPlots( humanPlayerList, "Human Player" )
 	PrintStartingPlots( aiPlayerList, "AI Player" )
-end
-
---- Prints the given message beneath a separator line.
-function PrintBeneathSeparatorLine( message )
-	PrintSeparatorLine()
-	print( message )
 end
 
 --- Prints a separator line.
@@ -72,7 +71,7 @@ end
 
 --- Prints starting plots for individual players of a given type (human or AI).
 -- @param playerList The list of Players whose starting plots will be printed.
--- @param playerTypeDescription A short description which indicates the player type (human or AI).
+-- @param playerTypeDescription Indicates the player type (human or AI).
 function PrintStartingPlots( playerList, playerTypeDescription )
 	for i = 1, #playerList do
 		local plot = playerList[i]:GetStartingPlot()
@@ -83,30 +82,33 @@ end
 --- Explains why the mod will have no effect in a game with no AI players.
 function PrintAllPlayersAreHumanMessage()
 	print("All players in this game are human.")
-	print("This mod works by swapping human and AI start positions to place the humans as far apart as possible.")
+	print([[This mod works by swapping human and AI start positions to place the
+		humans as far apart as possible.]])
 	print("Since there are no AIs in the game, the mod will have no effect.")
 end
 
 --- Maximizes starting distance between all human players in the game.
--- Nothing is returned; this function mutates Player objects within the given lists.
+-- Returns nothing; this function mutates Player objects within the given lists.
 -- @param allPlayerList All players in the game (both human and AI).
 -- @param humanPlayerList All human players in the game.
 function MaximizeDistanceBetweenHumanPlayers( allPlayerList, humanPlayerList )
-	--The following buffer will contain the players (human and/or AI) who occupy the 'most distant' starting plots after Civ VI's initial starting plot allocation.
-	--AI players will be removed from the buffer after their 'most distant' starting plot has been swapped with a human player.
-	--If human players are detected in this buffer, they will be removed from the buffer as no further processing is required (they are already in a most distant plot).
+	--The following buffer contains players (human and/or AI) who occupy the
+	--'most distant' starting plots after Civ VI's initial plot allocation.
 	local distantPlayerBuffer = FindMostDistantPlayers( allPlayerList, #humanPlayerList )
-	PrintBeneathSeparatorLine("Most distant starting plots: " .. GenerateStartingPlotsString( distantPlayerBuffer ))
 
-	--The following buffer contains all human players in the game.
-	--Players will be removed from the buffer when they occupy a 'most distant' starting plot.
+	PrintSeparatorLine()
+	plots = GenerateStartingPlotsString( distantPlayerBuffer )
+	print("Most distant starting plots: " .. plots)
+
+	--The following buffer initially contains all human players in the game.
 	local humanPlayerBuffer = ShallowCopy( humanPlayerList )
 
-	ExcludeHumanPlayersWhoAlreadyOccupyMostDistantPlots( distantPlayerBuffer, humanPlayerBuffer )
+	ExcludeHumansWhoAlreadyOccupyDistantPlots( distantPlayerBuffer, humanPlayerBuffer )
 
-	--Any players left in 'distantPlayerBuffer' after the above processing must be AI players.
+	--Any players left in the 'distantPlayerBuffer' must be AI players.
 	--Swap their starting plots with human players from the 'humanPlayerBuffer'.
-	PrintBeneathSeparatorLine("Number of human players to be repositioned: " .. #humanPlayerBuffer)
+	PrintSeparatorLine()
+	print("Number of human players to be repositioned: " .. #humanPlayerBuffer)
 	if #humanPlayerBuffer > 0 then
 		SwapStartingPlots( distantPlayerBuffer, humanPlayerBuffer )
 	end
@@ -125,9 +127,11 @@ function FindMostDistantPlayers( allPlayerList, humanPlayerCount )
 		mostDistantPlayerList = FindTwoMostDistantPlayers( allPlayerList )
 	else
 		assert( humanPlayerCount >= 3 )
-		PrintBeneathSeparatorLine("Determining all possible combinations of " .. humanPlayerCount .. " players...")
+		PrintSeparatorLine()
+		print("Determining all possible combinations of " .. humanPlayerCount .. " players...")
 		local playerComboList = FindPlayerCombos( allPlayerList, humanPlayerCount )
-		PrintBeneathSeparatorLine("Analysing player combinations to find the most distant combination...")
+		PrintSeparatorLine()
+		print("Analysing player combinations to find the most distant combination...")
 		mostDistantPlayerList = FindSeveralMostDistantPlayers( playerComboList )
 	end
 
@@ -166,12 +170,14 @@ end
 
 --- Finds all possible combinations of k players.
 -- @param allPlayerList All players in the game (both human and AI).
--- @param k All possible combinations of k players will be found. This parameter is named from 'n choose k' in mathematics.
--- @return a table containing all possible combinations of k players. Each entry in the table is itself a table, since each possible combination is stored as a table of Players.
+-- @param k All possible combinations of k players will be found.
+--          (Name comes from 'n choose k' in mathematics)
+-- @return a table containing all possible combinations of k players. Each entry
+--         in the table is itself a table, since each possible combination is
+--         stored as a table of Players.
 function FindPlayerCombos( allPlayerList, k )
 	local playerComboList = {}
 
-	--This nested function will be used to recursively find all possible combinations of k players.
 	local function Loop( i, playerCombo, k )
 		if k == 0 then
 			table.insert(playerComboList, playerCombo)
@@ -191,34 +197,42 @@ function FindPlayerCombos( allPlayerList, k )
 	return playerComboList
 end
 
---- Finds the combination of players which are currently most distant from each other, based upon the current starting plots held by each player.
--- @param playerComboList All player combinations to be examined. A table of tables, where each subtable is a list of Players. These lists should be equal in length.
--- @return a single table of Players; this is the combination of players from 'playerComboList' which are most distant from each other.
+--- Finds the players which are currently most distant from each other.
+-- @param playerComboList All player combinations to be examined. A table of
+--                        tables, where each subtable is a list of Players.
+--                        These lists should be equal in length.
+-- @return a single table of Players.
 function FindSeveralMostDistantPlayers( playerComboList )
-	--This algorithm is best suited to combinations of three or more players. (For two players, see 'FindTwoMostDistantPlayers' function)
-	assert( #playerComboList[1] >= 3, "This function is intended to be used with combinations of 3+ players" )
+	assert( #playerComboList[1] >= 3,
+		"This function is intended to be used with combinations of 3+ players" )
 
-	--The index number of the most distant combination of players (i.e. players who currently hold starting plots that are furthest from one another) that has been found so far.
-	--This 'leading candidate' may be mutated several times during the function as more optimal player combinations are found.
+	--Index of the most spread apart combination of players found so far.
+	--This may be mutated several times as more optimal combinations are found.
 	local leadCandidateIndex
 
-	--The highest minimum distance that has been found in any combination so far.
-	--This is used as the primary metric for determining the most optimal player combination.
+	--Highest minimum distance that has been found in any combination so far.
+	--(Primary metric for determining the optimal player combination)
 	local highestMinDistance = 0
 
-	--Whenever a new 'highestMinDistance' is found in a particular combination and recorded above, the sum distance of that combination is also recorded in this variable.
-	--This way, if another combination is found with an EQUAL minimum distance to 'highestMinDistance', sum distances can be used as a tiebreaking metric to determine which combination is most optimal.
+	--Whenever a new 'highestMinDistance' is found in a particular combination,
+	--the sum distance of that combination is also recorded in this variable.
+	--This way, if another combination is found with an EQUAL minimum distance to
+	--'highestMinDistance', sum distances can be used as a tiebreaking metric to
+	--determine which combination is more optimal.
 	local tiebreakerSumDistance
 
 	for i = 1, #playerComboList do
 		print("Computing distances for player combination " .. i .. "...")
 		local currentPlayerCombo = playerComboList[i]
 
-		--Store the distances between all starting plots in the current player combination.
-		local distanceList = ConditionallyGenerateDistanceList( currentPlayerCombo, highestMinDistance )
+		--Store the distances between all starting plots in the current combination.
+		local distanceList =
+		  ConditionallyGenerateDistanceList(currentPlayerCombo, highestMinDistance)
 
-		--If a nil cache was returned, this indicates that the starting plots in this combination are too close together. The combination can be discarded.
-		--Otherwise, examine the returned distance cache to determine whether this player combination is more optimal than the current lead candidate.
+		--If nil was returned, the starting plots in this combination are too close
+		--together and the combination can be discarded. Otherwise, examine the
+		--returned distance cache to determine whether this player combination is
+		--more optimal than the current lead candidate.
 		if distanceList ~= nil then
 			local minDistance = FindMinDistance( distanceList )
 			print("Minimum distance in player combination " .. i .. ": " .. minDistance)
@@ -226,34 +240,44 @@ function FindSeveralMostDistantPlayers( playerComboList )
 			if minDistance > highestMinDistance then
 				local message = "Player combination " .. i .. " is now the lead candidate."
 				if leadCandidateIndex ~= nil then
-					message = message .. " (Previous lead candidate was player combination " .. leadCandidateIndex .. " with minimum distance: " .. highestMinDistance .. ")"
+					message = message .. " (Previous lead candidate was player combination " ..
+						leadCandidateIndex .. " with minimum distance: " .. highestMinDistance .. ")"
 				end
 				print(message)
 				highestMinDistance = minDistance
 				leadCandidateIndex = i
 				tiebreakerSumDistance = ComputeSumDistance( distanceList )
 			elseif minDistance == highestMinDistance then
-				print("Tie found between player combination " .. i .. " and the lead candidate (player combination " .. leadCandidateIndex .. "). Using sum distance as a tiebreaker...")
+				print("Tie found between player combination " .. i .. " and leading player combination " ..
+					leadCandidateIndex .. ". Using sum distance as a tiebreaker...")
 				local currentSumDistance = ComputeSumDistance( distanceList )
 				if currentSumDistance > tiebreakerSumDistance then
-					print("Sum distance (" .. currentSumDistance .. ") of player combination " .. i .. " is higher than the previous lead candidate's sum distance (" .. tiebreakerSumDistance .. "). Player combination " .. i .. " is now the lead candidate.")
+					print("Sum distance (" .. currentSumDistance .. ") of player combination " ..
+						i .. " is higher than the previous lead candidate's sum distance (" ..
+						tiebreakerSumDistance .. "). Player combination " .. i .. " is now the lead candidate.")
 					leadCandidateIndex = i
 					tiebreakerSumDistance = currentSumDistance
 				else
-					print("Sum distance (" .. currentSumDistance .. ") of player combination " .. i .. " is not higher than the lead candidate's sum distance (" .. tiebreakerSumDistance .. "). No change in lead candidate.")
+					print("Sum distance (" .. currentSumDistance .. ") of player combination " ..
+					  i .. " is not higher than the lead candidate's sum distance (" ..
+					  tiebreakerSumDistance .. "). No change in lead candidate.")
 				end
 			end
 		end
 	end
 
-	PrintBeneathSeparatorLine("Analysis complete. Player combination " .. leadCandidateIndex .. " contains the most distant starting plots.")
+	PrintSeparatorLine()
+	print("Analysis complete. Player combination " ..
+		leadCandidateIndex .. " contains the most distant starting plots.")
 	return playerComboList[leadCandidateIndex]
 end
 
---- Generates a cache containing the distances between all players in the given combination.
+--- Generates a list of distances between all players in the given combination.
 -- @param playerCombo A table of Players.
--- @param requiredMinDistance For a distance cache to be returned from this function, all distances within the combination must be greater than or equal to the requiredMinDistance parameter. Otherwise nil will be returned.
--- @return a table of distance values (integers), or nil if any distance is found which is below the requiredMinDistance. This is an optimisation to reject suboptimal (i.e. too close together) player combinations as early as possible.
+-- @param requiredMinDistance If any distance within the combination is less
+--                            than this parameter, nil will be returned.
+-- @return a table of distance integers, or nil if any distance is found which
+--         is below the requiredMinDistance.
 function ConditionallyGenerateDistanceList( playerCombo, requiredMinDistance )
 	local distanceList = {}
 
@@ -262,10 +286,12 @@ function ConditionallyGenerateDistanceList( playerCombo, requiredMinDistance )
 		for k = j + 1, #playerCombo do
 			local startingPlot2Index = playerCombo[k]:GetStartingPlot():GetIndex()
 			local distance = Map.GetPlotDistance(startingPlot1Index, startingPlot2Index)
-			print("Distance between plot " .. startingPlot1Index .. " and plot " .. startingPlot2Index .. " is: " .. distance)
+			print("Distance between plot " .. startingPlot1Index .. " and plot " ..
+				startingPlot2Index .. " is: " .. distance)
 
 			if distance < requiredMinDistance then
-				print("Suboptimal distance detected (lower than " .. requiredMinDistance .. "). Discarding combination.")
+				print("Suboptimal distance found (lower than " ..
+					requiredMinDistance .. "). Discarding combination.")
 				return nil
 			end
 
@@ -326,20 +352,23 @@ function ShallowCopy(origTable)
 	return newTable
 end
 
---- Removes human players from processing buffers if they already occupy a most distant starting plot.
--- Nothing is returned; this function simply mutates the given buffers.
--- @param distantPlayerBuffer Initially contains the players who currently occupy the most distant starting plots.
+--- Removes human players from processing buffers if they already occupy a distant starting plot.
+-- Returns nothing; this function simply mutates the given buffers.
+-- @param distantPlayerBuffer Initially contains the players who currently
+--                            occupy the most distant starting plots.
 -- @param humanPlayerBuffer Initially contains all human players in the game.
-function ExcludeHumanPlayersWhoAlreadyOccupyMostDistantPlots( distantPlayerBuffer, humanPlayerBuffer )
-	PrintBeneathSeparatorLine("Checking if any of the most distant plots are already occupied by human players...")
+function ExcludeHumansWhoAlreadyOccupyDistantPlots( distantPlayerBuffer, humanPlayerBuffer )
+	PrintSeparatorLine()
+	print("Checking if any of the most distant plots are already occupied by human players...")
 
-	for i = #humanPlayerBuffer, 1, -1 do		--Iterate backwards so that players can safely be removed from the buffer during iteration.
+	--Iterate backwards so that players can safely be removed while iterating.
+	for i = #humanPlayerBuffer, 1, -1 do
 		local humanStartingPlot = humanPlayerBuffer[i]:GetStartingPlot()
-		for j = 1, #distantPlayerBuffer do		--No need to iterate backwards here, since 'break' is invoked upon deletion of an element.
+		for j = 1, #distantPlayerBuffer do
 			local mostDistantStartingPlot = distantPlayerBuffer[j]:GetStartingPlot()
 			if humanStartingPlot == mostDistantStartingPlot then
-				print("Plot " .. mostDistantStartingPlot:GetIndex() .. " is occupied by a human player. This player does not need to be repositioned.")
-				--Remove the human player from both processing buffers, since repositioning of this player will not be required.
+				print("Plot " .. mostDistantStartingPlot:GetIndex() ..
+					" is occupied by a human player. This player does not need to be repositioned.")
 				table.remove(humanPlayerBuffer, i)
 				table.remove(distantPlayerBuffer, j)
 				break
@@ -348,16 +377,20 @@ function ExcludeHumanPlayersWhoAlreadyOccupyMostDistantPlots( distantPlayerBuffe
 	end
 end
 
---- Swaps starting plots between any AI players who currently occupy these plots, and any human players who do not yet occupy a most distant starting plot.
--- Nothing is returned; this function simply mutates the given buffers.
--- @param distantPlayerBuffer This should currently contain only AI players who currently occupy the most distant starting plots.
--- @param humanPlayerBuffer This should currently contain only the human players who do yet not occupy a most distant starting plot.
+--- Swaps distant starting plots from AI players to human players.
+-- Returns nothing; this function simply mutates the given buffers.
+-- @param distantPlayerBuffer Should currently contain only AI players who
+--                            currently occupy the most distant starting plots.
+-- @param humanPlayerBuffer Should currently contain only the human players who
+--                          do yet not occupy a most distant starting plot.
 function SwapStartingPlots( distantPlayerBuffer, humanPlayerBuffer )
-	--The number of human players to be repositioned should equal the number of AI players who currently hold 'most distant' starting plots.
+	--The number of human players to be repositioned should equal the number
+	--of AI players who currently hold 'most distant' starting plots.
 	assert( #humanPlayerBuffer == #distantPlayerBuffer )
 
 	while #humanPlayerBuffer > 0 do
-		--Take the next player from each buffer and swap their starting positions, leaving the human player with a 'most distant' starting plot.
+		--Take the next player from each buffer and swap their starting positions,
+		--leaving the human player with a 'most distant' starting plot.
 		local humanPlayer = table.remove(humanPlayerBuffer, 1)
 		local aiPlayer    = table.remove(distantPlayerBuffer, 1)
 
@@ -367,6 +400,7 @@ function SwapStartingPlots( distantPlayerBuffer, humanPlayerBuffer )
 		humanPlayer:SetStartingPlot( aiPlayerStartingPlot )
 		aiPlayer:SetStartingPlot( humanPlayerStartingPlot )
 
-		print("Reassigned starting plot " .. humanPlayer:GetStartingPlot():GetIndex() .. " from an AI player to a human player.")
+		print("Reassigned starting plot " .. humanPlayer:GetStartingPlot():GetIndex() ..
+			" from an AI player to a human player.")
 	end
 end
