@@ -6,13 +6,23 @@
 -- GitHub project: github.com/kevincoghlan/distant-multiplayer-start
 ------------------------------------------------------------------------------
 
+--Official number of supported players in Civ VI base game is 12. The mod currently matches this.
+--Higher player counts could result in a combinatorial explosion in this mod as the number of
+--possible starting plot combinations increases dramatically. In the future, algorithmic
+--adjustments to the mod may make it possible to increase the supported player count.
+local supportedPlayerCount = 12
+
 --- Maximizes starting distance between all human players in the game.
 -- Called from a modified version of Civ VI's 'AssignStartingPlots.lua' script.
 -- @param playerIDList The IDs of all players in the game (both human and AI).
 function DistantMultiplayerStart( playerIDList )
 	local allPlayerList, humanPlayerList, aiPlayerList = GeneratePlayerLists( playerIDList )
 
-	if #humanPlayerList < #allPlayerList then
+	if #allPlayerList > supportedPlayerCount then
+		PrintTooManyPlayersMessage( #allPlayerList )
+	elseif #humanPlayerList == #allPlayerList then
+		PrintAllPlayersAreHumanMessage()
+	else
 		print("Distant Multiplayer Start processing started at " .. GenerateTimestamp())
 		PrintSeparatorLine()
 		print("Initial starting plots, before the mod makes any changes:")
@@ -24,8 +34,6 @@ function DistantMultiplayerStart( playerIDList )
 		print("Final starting plots:")
 		PrintAllStartingPlots( humanPlayerList, aiPlayerList )
 		print("Distant Multiplayer Start processing finished at " .. GenerateTimestamp())
-	elseif #humanPlayerList == #allPlayerList then
-		PrintAllPlayersAreHumanMessage()
 	end
 end
 
@@ -79,11 +87,18 @@ function PrintStartingPlots( playerList, playerTypeDescription )
 	end
 end
 
---- Explains why the mod will have no effect in a game with no AI players.
+--- Explains that the mod will have no effect in a game with too many players.
+function PrintTooManyPlayersMessage( playerCount )
+	print("The number of players in this game (" .. playerCount .. ") exceeds the max number of " ..
+	  "supported players (" .. supportedPlayerCount .. "). The mod will have no effect.")
+	print("Higher player numbers may be supported in a future version.")
+end
+
+--- Explains that the mod will have no effect in a game with no AI players.
 function PrintAllPlayersAreHumanMessage()
 	print("All players in this game are human.")
-	print([[This mod works by swapping human and AI start positions to place the
-		humans as far apart as possible.]])
+	print("This mod works by swapping human and AI start positions to place the " ..
+		"humans as far apart as possible.")
 	print("Since there are no AIs in the game, the mod will have no effect.")
 end
 
