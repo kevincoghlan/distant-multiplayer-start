@@ -319,8 +319,17 @@ function AssignStartingPlots:__SetStartMajor(plots)
 
 	sortedPlots ={};
 
+	if plots == nil then
+		return;
+	end
+
 	local iSize = #plots;
 	local iContinentIndex = 1;
+
+	-- Nothing there?  Just exit, returing nil
+	if iSize == 0 then
+		return;
+	end
 
 	for i, plot in ipairs(plots) do
 		row = {};
@@ -348,6 +357,8 @@ function AssignStartingPlots:__SetStartMajor(plots)
 	end
 
 	local bValid = false;
+	local pFallback:table = Map.GetPlotByIndex(sortedPlots[1].Plot);
+	local iFallBackScore = 0;
 	while bValid == false and iSize >= iContinentIndex do
 		bValid = true;
 		local NWMajor = 0;
@@ -358,19 +369,35 @@ function AssignStartingPlots:__SetStartMajor(plots)
 		-- Checks to see if the plot is impassable
 		if(pTempPlot:IsImpassable() == true) then
 			bValid = false;
+		else
+			local iFallBackScoreTemp = 0;
+			if (iFallBackScore <= iFallBackScoreTemp) then
+				pFallback = pTempPlot;
+				iFallBackScore = iFallBackScoreTemp;
+			end
 		end
 
 		-- Checks to see if the plot is water
 		if(pTempPlot:IsWater() == true) then
 			bValid = false;
+		else
+			local iFallBackScoreTemp = 1;
+			if (iFallBackScore <= iFallBackScoreTemp and bValid == true) then
+				pFallback = pTempPlot;
+				iFallBackScore = iFallBackScoreTemp;
+			end
 		end
 
-		-- Checks to see if there are resources
-		if(pTempPlot:GetResourceCount() > 0) then
-		   local bValidResource = self:__BonusResource(pTempPlot);
-		    if(bValidResource == false) then
-		       bValid = false;
-		    end
+		-- Checks to see if there are any major civs in the given distance
+		local bMajorCivCheck = self:__MajorCivBuffer(pTempPlot);
+		if(bMajorCivCheck == false) then
+			bValid = false;
+		else
+			local iFallBackScoreTemp = 2;
+			if (iFallBackScore <= iFallBackScoreTemp and bValid == true) then
+				pFallback = pTempPlot;
+				iFallBackScore = iFallBackScoreTemp;
+			end
 		end
 
 		-- Checks to see if there are luxuries
@@ -378,6 +405,12 @@ function AssignStartingPlots:__SetStartMajor(plots)
 			local bLuxuryCheck = self:__LuxuryBuffer(pTempPlot);
 			if(bLuxuryCheck  == false) then
 				bValid = false;
+			else
+				local iFallBackScoreTemp = 3;
+			if (iFallBackScore <= iFallBackScoreTemp and bValid == true) then
+				pFallback = pTempPlot;
+				iFallBackScore = iFallBackScoreTemp;
+			end
 			end
 		end
 
@@ -392,23 +425,49 @@ function AssignStartingPlots:__SetStartMajor(plots)
 		local bWaterCheck = self:__GetWaterCheck(pTempPlot);
 		if(bWaterCheck == false) then
 			bValid = false;
+		else
+			local iFallBackScoreTemp = 4;
+			if (iFallBackScore <= iFallBackScoreTemp and bValid == true) then
+				pFallback = pTempPlot;
+				iFallBackScore = iFallBackScoreTemp;
+			end
 		end
 
 		local bValidAdjacentCheck = self:__GetValidAdjacent(pTempPlot, 0);
 		if(bValidAdjacentCheck == false) then
 			bValid = false;
+		else
+			local iFallBackScoreTemp = 5;
+			if (iFallBackScore <= iFallBackScoreTemp and bValid == true) then
+				pFallback = pTempPlot;
+				iFallBackScore = iFallBackScoreTemp;
+			end
 		end
 
 		-- Checks to see if there are natural wonders in the given distance
 		local bNaturalWonderCheck = self:__NaturalWonderBuffer(pTempPlot, false);
 		if(bNaturalWonderCheck == false) then
 			bValid = false;
+		else
+			local iFallBackScoreTemp = 6;
+			if (iFallBackScore <= iFallBackScoreTemp and bValid == true) then
+				pFallback = pTempPlot;
+				iFallBackScore = iFallBackScoreTemp;
+			end
 		end
 
-		-- Checks to see if there are any major civs in the given distance
-		local bMajorCivCheck = self:__MajorCivBuffer(pTempPlot);
-		if(bMajorCivCheck == false) then
-			bValid = false;
+		-- Checks to see if there are resources
+		if(pTempPlot:GetResourceCount() > 0) then
+		   local bValidResource = self:__BonusResource(pTempPlot);
+		    if(bValidResource == false) then
+		       bValid = false;
+			end
+		else
+			local iFallBackScoreTemp = 7;
+			if (iFallBackScore <= iFallBackScoreTemp and bValid == true) then
+				pFallback = pTempPlot;
+				iFallBackScore = iFallBackScoreTemp;
+			end
 		end
 
 		-- Checks to see if there is an Oasis
@@ -425,7 +484,7 @@ function AssignStartingPlots:__SetStartMajor(plots)
 		end
 	end
 
-	return nil;
+	return pFallback;
 end
 
 ------------------------------------------------------------------------------
@@ -439,7 +498,17 @@ function AssignStartingPlots:__SetStartMinor(plots)
 
 	sortedPlots ={};
 
+	if plots == nil then
+		return;
+	end
+
 	local iSize = #plots;
+
+	-- Nothing there?  Just exit, returing nil
+	if iSize == 0 then
+		return;
+	end
+
 	local iContinentIndex = 1;
 
 	for i, plot in ipairs(plots) do
@@ -452,6 +521,8 @@ function AssignStartingPlots:__SetStartMinor(plots)
 	table.sort (sortedPlots, function(a, b) return a.Fertility > b.Fertility; end);
 
 	local bValid = false;
+	local pFallback:table = Map.GetPlotByIndex(sortedPlots[1].Plot);
+	local iFallBackScore = 0;
 	while bValid == false and iSize >= iContinentIndex do
 		bValid = true;
 		local NWMinor = 2;
@@ -462,11 +533,58 @@ function AssignStartingPlots:__SetStartMinor(plots)
 		-- Checks to see if the plot is impassable
 		if(pTempPlot:IsImpassable() == true) then
 			bValid = false;
+		else
+			local iFallBackScoreTemp = 0;
+			if (iFallBackScore <= iFallBackScoreTemp) then
+				pFallback = pTempPlot;
+				iFallBackScore = iFallBackScoreTemp;
+			end
 		end
 
 		-- Checks to see if the plot is water
 		if(pTempPlot:IsWater() == true) then
 			bValid = false;
+		else
+			local iFallBackScoreTemp = 1;
+			if (iFallBackScore <= iFallBackScoreTemp and bValid == true) then
+				pFallback = pTempPlot;
+				iFallBackScore = iFallBackScoreTemp;
+			end
+		end
+
+		-- Checks to see if there are any minor civs in the given distance
+		local bMinorCivCheck = self:__MinorCivBuffer(pTempPlot, 1);
+		if(bMinorCivCheck == false) then
+			bValid = false;
+		else
+			local iFallBackScoreTemp = 2;
+			if (iFallBackScore <= iFallBackScoreTemp and bValid == true) then
+				pFallback = pTempPlot;
+				iFallBackScore = iFallBackScoreTemp;
+			end
+		end
+
+		local bValidAdjacentCheck = self:__GetValidAdjacent(pTempPlot, 2);
+		if(bValidAdjacentCheck == false) then
+			bValid = false;
+		else
+			local iFallBackScoreTemp = 3;
+			if (iFallBackScore <= iFallBackScoreTemp and bValid == true) then
+				pFallback = pTempPlot;
+				iFallBackScore = iFallBackScoreTemp;
+			end
+		end
+
+		-- Checks to see if there are natural wonders in the given distance
+		local bNaturalWonderCheck = self:__NaturalWonderBuffer(pTempPlot, true);
+		if(bNaturalWonderCheck == false) then
+			bValid = false;
+		else
+			local iFallBackScoreTemp = 4;
+			if (iFallBackScore <= iFallBackScoreTemp and bValid == true) then
+				pFallback = pTempPlot;
+				iFallBackScore = iFallBackScoreTemp;
+			end
 		end
 
 		-- Checks to see if there are resources
@@ -475,23 +593,12 @@ function AssignStartingPlots:__SetStartMinor(plots)
 			if(bValidResource == false) then
 				bValid = false;
 			end
-		end
-
-		local bValidAdjacentCheck = self:__GetValidAdjacent(pTempPlot, 2);
-		if(bValidAdjacentCheck == false) then
-			bValid = false;
-		end
-
-		-- Checks to see if there are natural wonders in the given distance
-		local bNaturalWonderCheck = self:__NaturalWonderBuffer(pTempPlot, true);
-		if(bNaturalWonderCheck == false) then
-			bValid = false;
-		end
-
-		-- Checks to see if there are any minor civs in the given distance
-		local bMinorCivCheck = self:__MinorCivBuffer(pTempPlot, 1);
-		if(bMinorCivCheck == false) then
-			bValid = false;
+		else
+			local iFallBackScoreTemp = 5;
+			if (iFallBackScore <= iFallBackScoreTemp and bValid == true) then
+				pFallback = pTempPlot;
+				iFallBackScore = iFallBackScoreTemp;
+			end
 		end
 
 		-- Checks to see if there is an Oasis
@@ -507,7 +614,7 @@ function AssignStartingPlots:__SetStartMinor(plots)
 		end
 	end
 
-	return nil;
+	return pFallback;
 end
 
 ------------------------------------------------------------------------------
